@@ -118,7 +118,7 @@ dependencies:
   - python-dateutil=2.8.1=py_0
   - python-picard=0.4=pyh5ca1d4c_1
   - python_abi=3.8=1_cp38
-  - pytorch=1.5.0=py3.8_cuda10.2.89_cudnn7.6.5_0
+  - pytorch=1.5.1=py3.8_cuda10.2.89_cudnn7.6.5_0
   - pytz=2020.1=pyh9f0ad1d_0
   - pyvista=0.25.3=py_0
   - qt=5.12.5=hd8c4c69_1
@@ -136,7 +136,7 @@ dependencies:
   - tbb=2020.1=hc9558a2_0
   - threadpoolctl=2.1.0=pyh5ca1d4c_0
   - tk=8.6.10=hed695b0_0
-  - torchvision=0.6.0=py38_cu102
+  - torchvision=0.6.1=py38_cu102
   - tornado=6.0.4=py38h1e0a361_1
   - tqdm=4.46.1=pyh9f0ad1d_0
   - traits=6.1.0=py38h1e0a361_0
