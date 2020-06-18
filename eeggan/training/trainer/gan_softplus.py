@@ -54,15 +54,16 @@ class GanSoftplusTrainer(Trainer):
         return loss_real.data.item(), loss_fake.data.item(), loss_r1, loss_r2
 
     def train_generator(self, batch_real: Data[torch.Tensor], batch_fake: Data[torch.Tensor], latent: torch.Tensor):
+        for p in self.discriminator.parameters():
+            p.requires_grad = False
         self.generator.zero_grad()
         self.optimizer_gen.zero_grad()
-        train_tmp = self.discriminator.training
-        self.discriminator.eval()
         fx_fake = self.discriminator(batch_fake.X, y=batch_fake.y, y_onehot=batch_fake.y_onehot)
-        self.discriminator.train(train_tmp)
         loss = softplus(-fx_fake).mean()
         loss.backward()
         self.optimizer_gen.step()
+        for p in self.discriminator.parameters():
+            p.requires_grad = True
         return loss.item()
 
 

@@ -1,9 +1,6 @@
 #  Author: Kay Hartmann <kg.hartma@gmail.com>
 
-from typing import List, Tuple
-
 import torch
-from ignite.metrics import Metric, MetricUsage
 from torch import sigmoid
 from torch.nn import BCELoss
 from torch.optim.optimizer import Optimizer
@@ -16,12 +13,12 @@ from eeggan.training.trainer.trainer import Trainer
 
 class GanTrainer(Trainer):
 
-    def __init__(self, discriminator: Discriminator, generator: Generator, i_logging,
-                 metrics: List[Tuple[Metric, MetricUsage]], optimizer_disc: Optimizer, optimizer_gen: Optimizer):
+    def __init__(self, discriminator: Discriminator, generator: Generator, i_logging, optimizer_disc: Optimizer,
+                 optimizer_gen: Optimizer):
         self.loss = BCELoss()
         self.optimizer_disc = optimizer_disc
         self.optimizer_gen = optimizer_gen
-        super().__init__(discriminator, generator, i_logging, metrics)
+        super().__init__(discriminator, generator, i_logging)
 
     def train_discriminator(self, batch_real: Data[torch.Tensor], batch_fake: Data[torch.Tensor], latent: torch.Tensor):
         self.discriminator.zero_grad()
@@ -36,13 +33,14 @@ class GanTrainer(Trainer):
         return loss_real.data.item(), loss_fake.data.item()
 
     def train_generator(self, batch_real: Data[torch.Tensor], batch_fake: Data[torch.Tensor], latent: torch.Tensor):
+        for p in self.discriminator.parameters():
+            p.requires_grad = False
         self.generator.zero_grad()
         self.optimizer_gen.zero_grad()
-        train_tmp = self.discriminator.training
-        self.discriminator.eval()
-        fx_fake = self.discriminator(batch_fake.X, y=batch_fake.y, y_onehot=batch_fake.y_onehot)
-        self.discriminator.train(train_tmp)
+        fx_fake = sigmoid(self.discriminator(batch_fake.X, y=batch_fake.y, y_onehot=batch_fake.y_onehot))
         loss = self.loss(fx_fake, torch.ones_like(fx_fake))
         loss.backward()
         self.optimizer_gen.step()
+        for p in self.discriminator.parameters():
+            p.requires_grad = True
         return loss.item()

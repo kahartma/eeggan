@@ -42,8 +42,8 @@ n_epochs_fade = int(0.1 * n_epochs_per_stage)
 
 n_latent = 200  # latent vector size
 lr_d = 0.005  # discriminator learning rate
-r1_gamma = 10
-r2_gamma = 10
+r1_gamma = 10.
+r2_gamma = 10.
 lr_g = 0.001  # generator learning rate
 betas = (0., 0.99)  # optimizer betas
 
@@ -67,9 +67,6 @@ if __name__ == '__main__':
     discriminator.apply(weight_filler)
     generator, discriminator = to_cuda(generator, discriminator)
 
-    generator.train()
-    discriminator.train()
-
     # optimizer
     optimizer_discriminator = optim.Adam(discriminator.parameters(), lr=lr_d, betas=betas)
     optimizer_generator = optim.Adam(generator.parameters(), lr=lr_g, betas=betas)
@@ -92,6 +89,9 @@ if __name__ == '__main__':
                         Events.EPOCH_COMPLETED(every=1))
 
     for stage in range(n_stages):
+        generator.train()
+        discriminator.train()
+
         # load trained deep4s for stage
         deep4s = to_cuda(*load_deeps4(SUBJ_IND, stage, DEEP4_PATH))
 
