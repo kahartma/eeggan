@@ -13,12 +13,13 @@ from eeggan.training.trainer.trainer import Trainer
 
 class GanTrainer(Trainer):
 
-    def __init__(self, discriminator: Discriminator, generator: Generator, i_logging, optimizer_disc: Optimizer,
+    def __init__(self, discriminator: Discriminator, generator: Generator, resample_latent, i_logging,
+                 optimizer_disc: Optimizer,
                  optimizer_gen: Optimizer):
         self.loss = BCELoss()
         self.optimizer_disc = optimizer_disc
         self.optimizer_gen = optimizer_gen
-        super().__init__(discriminator, generator, i_logging)
+        super().__init__(discriminator, generator, resample_latent, i_logging)
 
     def train_discriminator(self, batch_real: Data[torch.Tensor], batch_fake: Data[torch.Tensor], latent: torch.Tensor):
         self.discriminator.zero_grad()

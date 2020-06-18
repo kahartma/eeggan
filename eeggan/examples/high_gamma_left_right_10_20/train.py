@@ -41,6 +41,7 @@ plot_every_epoch = 50
 n_epochs_fade = int(0.1 * n_epochs_per_stage)
 
 n_latent = 200  # latent vector size
+resample_latent = True  # if generator both use the same latent samples or that it gets resampled
 lr_d = 0.005  # discriminator learning rate
 r1_gamma = 10.
 r2_gamma = 10.
@@ -72,7 +73,8 @@ if __name__ == '__main__':
     optimizer_generator = optim.Adam(generator.parameters(), lr=lr_g, betas=betas)
 
     # trainer engine
-    trainer = GanSoftplusTrainer(discriminator, generator, r1_gamma, r2_gamma, 10, optimizer_discriminator,
+    trainer = GanSoftplusTrainer(discriminator, generator, r1_gamma, r2_gamma, resample_latent, 10,
+                                 optimizer_discriminator,
                                  optimizer_generator)
 
     # modules to save

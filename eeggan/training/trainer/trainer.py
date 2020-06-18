@@ -32,11 +32,13 @@ class Trainer(Engine, metaclass=ABCMeta):
             self,
             discriminator: Discriminator,
             generator: Generator,
+            resample_latent: bool,
             i_logging: int,
             rng: RandomState = RandomState()
     ):
         self.discriminator = discriminator
         self.generator = generator
+        self.resample_latent = resample_latent
         self.rng = rng
         Engine.__init__(self, self.train_batch)
         self.add_event_handler(Events.ITERATION_COMPLETED(every=i_logging), self.log_training)
@@ -60,6 +62,10 @@ class Trainer(Engine, metaclass=ABCMeta):
             batch_fake = Data[torch.Tensor](X_fake, y_fake, y_onehot_fake)
 
         loss_d = self.train_discriminator(batch_real, batch_fake, latent)
+
+        if self.resample_latent:
+            latent, y_fake, y_onehot_fake = to_device(batch_real.X.device,
+                                                      *self.generator.create_latent_input(self.rng, len(batch_real.X)))
 
         X_fake = self.generator(latent, y=y_fake, y_onehot=y_onehot_fake)
         batch_fake = Data[torch.Tensor](X_fake, y_fake, y_onehot_fake)
