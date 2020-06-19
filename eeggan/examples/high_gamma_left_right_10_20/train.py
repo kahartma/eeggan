@@ -48,13 +48,6 @@ r2_gamma = 0.
 lr_g = 0.001  # generator learning rate
 betas = (0., 0.99)  # optimizer betas
 
-lambd = 10
-one_sided_penalty = True
-distance_weighting = True
-eps_drift = 0.
-eps_center = 0.001
-lambd_consistency_term = 0.
-
 if __name__ == '__main__':
     init_cuda()  # activate cuda
 
@@ -65,6 +58,7 @@ if __name__ == '__main__':
     n_time = train_data.X.shape[2]  # number of samples
     n_time_last_layer = int(np.floor(n_time / 2 ** n_stages))  # number of samples in last discriminator layer
 
+    # create discriminator and generator modules
     discriminator = ProgressiveDiscriminator(n_time, n_chans, n_classes,
                                              create_disc_blocks(n_chans, n_time_last_layer, n_classes))
     generator = ProgressiveGenerator(n_time, n_chans, n_classes, n_latent,
@@ -98,9 +92,6 @@ if __name__ == '__main__':
                         Events.EPOCH_COMPLETED(every=1))
 
     for stage in range(n_stages):
-        generator.train()
-        discriminator.train()
-
         # load trained deep4s for stage
         deep4s = to_cuda(*load_deeps4(SUBJ_IND, stage, DEEP4_PATH))
 

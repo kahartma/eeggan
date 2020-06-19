@@ -19,7 +19,7 @@ N_PROGRESSIVE_STAGES = 6
 N_DEEP4 = 10
 
 if __name__ == '__main__':
-    init_cuda()
+    init_cuda()  # activate cuda
 
     for subj_ind in SUBJ_INDECES:
         make_dataset_for_subj(subj_ind, HIGH_GAMMA_DATAPATH, DATASET_PATH, CHANNELS_10_20, CLASSDICT_REST_RIGHT_HAND,
