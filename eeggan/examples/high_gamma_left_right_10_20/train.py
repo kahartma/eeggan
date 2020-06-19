@@ -26,8 +26,9 @@ from eeggan.training.progressive.handler import ProgressionHandler
 from eeggan.training.trainer.gan_softplus import GanSoftplusTrainer
 
 SUBJ_IND = 1
-RESULT_PATH = "/home/khartmann/projects/eeggandata/results"
+RESULT_PATH = "/home/khartmann/projects/eeggandata/results/%d" % SUBJ_IND
 PLOT_PATH = os.path.join(RESULT_PATH, "plots")
+os.makedirs(PLOT_PATH, exist_ok=True)
 
 n_chans = 21  # number of channels in data
 n_classes = 2  # number of classes in data
@@ -108,7 +109,8 @@ if __name__ == '__main__':
         X_block = downsample(train_data.X, factor=sample_factor, axis=2)
 
         # initiate spectral plotter
-        spectral_plot = SpectralPlot(pyplot.figure(), PLOT_PATH, "spectral_", X_block.shape[2], orig_fs / sample_factor)
+        spectral_plot = SpectralPlot(pyplot.figure(), PLOT_PATH, "spectral_stage_%d_" % stage, X_block.shape[2],
+                                     orig_fs / sample_factor)
         spectral_handler = trainer.add_event_handler(Events.EPOCH_COMPLETED(every=plot_every_epoch), spectral_plot)
 
         # initiate metrics

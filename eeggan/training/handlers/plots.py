@@ -16,8 +16,6 @@ class EpochPlot(metaclass=ABCMeta):
         self.figure = figure
         self.path = plot_path
         self.prefix = prefix
-        if not os.path.exists(plot_path):
-            os.makedirs(plot_path)
 
     def __call__(self, trainer: Trainer):
         self.plot(trainer)
