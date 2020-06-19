@@ -36,17 +36,23 @@ final_fs = orig_fs / 2  # reduced sampling rate of data
 
 n_batch = 128  # batch size
 n_stages = 6  # number of progressive stages
-n_epochs_per_stage = 1000  # epochs in each progressive stage
+n_epochs_per_stage = 2000  # epochs in each progressive stage
 plot_every_epoch = 50
 n_epochs_fade = int(0.1 * n_epochs_per_stage)
 
 n_latent = 200  # latent vector size
-resample_latent = True  # if generator both use the same latent samples or that it gets resampled
 lr_d = 0.005  # discriminator learning rate
 r1_gamma = 10.
-r2_gamma = 10.
+r2_gamma = 0.
 lr_g = 0.001  # generator learning rate
 betas = (0., 0.99)  # optimizer betas
+
+lambd = 10
+one_sided_penalty = True
+distance_weighting = True
+eps_drift = 0.
+eps_center = 0.001
+lambd_consistency_term = 0.
 
 if __name__ == '__main__':
     init_cuda()  # activate cuda
@@ -73,7 +79,7 @@ if __name__ == '__main__':
     optimizer_generator = optim.Adam(generator.parameters(), lr=lr_g, betas=betas)
 
     # trainer engine
-    trainer = GanSoftplusTrainer(discriminator, generator, r1_gamma, r2_gamma, resample_latent, 10,
+    trainer = GanSoftplusTrainer(discriminator, generator, r1_gamma, r2_gamma, 10,
                                  optimizer_discriminator,
                                  optimizer_generator)
 
