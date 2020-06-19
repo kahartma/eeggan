@@ -4,7 +4,7 @@ from typing import Tuple
 
 import torch
 
-from eeggan.cuda.cuda import to_cuda
+from eeggan.cuda import to_cuda
 
 
 def calculate_activation_statistics(act: torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor]:

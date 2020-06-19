@@ -5,7 +5,7 @@ import random
 import torch
 from numba import np
 
-from eeggan.cuda.cuda import get_activate_cuda
+from eeggan.cuda import get_activate_cuda
 
 SEED = 1234567
 

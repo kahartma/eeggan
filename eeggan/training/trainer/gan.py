@@ -4,7 +4,7 @@ import torch
 from torch import sigmoid
 from torch.nn import BCELoss
 
-from eeggan.cuda.cuda import to_device
+from eeggan.cuda import to_device
 from eeggan.data.data import Data
 from eeggan.training.discriminator import Discriminator
 from eeggan.training.generator import Generator

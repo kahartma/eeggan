@@ -1,6 +1,6 @@
 #  Author: Kay Hartmann <kg.hartma@gmail.com>
 
-from eeggan.cuda.cuda import init_cuda
+from eeggan.cuda import init_cuda
 from eeggan.data.high_gamma import make_deep4_for_subj, make_dataset_for_subj, CHANNELS_10_20, \
     CLASSDICT_REST_RIGHT_HAND, SUBJ_INDECES
 

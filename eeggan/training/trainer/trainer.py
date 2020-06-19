@@ -9,7 +9,7 @@ from ignite.metrics import Metric, MetricUsage
 from numpy.random.mtrand import RandomState
 from torch.optim.optimizer import Optimizer
 
-from eeggan.cuda.cuda import to_device
+from eeggan.cuda import to_device
 from eeggan.data.data import Data
 from eeggan.training.discriminator import Discriminator
 from eeggan.training.generator import Generator

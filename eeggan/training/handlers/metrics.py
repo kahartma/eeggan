@@ -9,7 +9,7 @@ from ignite.metrics import Metric
 from torch import Tensor
 from torch.nn.modules.module import Module
 
-from eeggan.cuda.cuda import to_device
+from eeggan.cuda import to_device
 from eeggan.data.preprocess.resample import upsample
 from eeggan.training.trainer.trainer import BatchOutput
 from eeggan.validation.metrics.frechet import calculate_activation_statistics, calculate_frechet_distances

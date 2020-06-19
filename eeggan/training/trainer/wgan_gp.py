@@ -2,7 +2,7 @@
 import torch
 from torch import autograd
 
-from eeggan.cuda.cuda import to_device
+from eeggan.cuda import to_device
 from eeggan.data.data import Data
 from eeggan.training.discriminator import Discriminator
 from eeggan.training.trainer.trainer import Trainer

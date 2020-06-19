@@ -11,7 +11,7 @@ from matplotlib import pyplot
 from torch import Tensor, optim
 from torch.utils.data import DataLoader
 
-from eeggan.cuda.cuda import to_cuda, init_cuda
+from eeggan.cuda import to_cuda, init_cuda
 from eeggan.data.data import Data
 from eeggan.data.high_gamma import load_deeps4
 from eeggan.data.high_gamma.dataset import HighGammaDataset
