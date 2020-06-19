@@ -15,7 +15,8 @@ from eeggan.data.data import Data
 from eeggan.data.high_gamma import load_deeps4
 from eeggan.data.high_gamma.dataset import HighGammaDataset
 from eeggan.data.preprocess.resample import downsample
-from eeggan.examples.high_gamma_left_right_10_20.baseline import create_gen_blocks, create_disc_blocks
+from eeggan.examples.high_gamma_left_right_10_20.baseline import create_progressive_generator_blocks, \
+    create_progressive_discriminator_blocks
 from eeggan.examples.high_gamma_left_right_10_20.make_data import DATASET_PATH, DEEP4_PATH
 from eeggan.pytorch.utils.weights import weight_filler
 from eeggan.training.handlers.metrics import WassersteinMetric, InceptionMetric, FrechetMetric, LossMetric
@@ -61,9 +62,11 @@ if __name__ == '__main__':
 
     # create discriminator and generator modules
     discriminator = ProgressiveDiscriminator(n_time, n_chans, n_classes,
-                                             create_disc_blocks(n_chans, n_time_last_layer, n_classes))
+                                             create_progressive_discriminator_blocks(n_chans, n_time_last_layer,
+                                                                                     n_classes))
     generator = ProgressiveGenerator(n_time, n_chans, n_classes, n_latent,
-                                     create_gen_blocks(n_chans, n_latent, n_time_last_layer, n_classes))
+                                     create_progressive_generator_blocks(n_chans, n_latent, n_time_last_layer,
+                                                                         n_classes))
 
     # initiate weights
     generator.apply(weight_filler)
