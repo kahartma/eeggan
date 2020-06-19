@@ -60,7 +60,8 @@ class GanSoftplusTrainer(Trainer):
 
         self.optimizer_disc.step()
 
-        return loss_real.item(), loss_fake.item(), loss_r1, loss_r2
+        return {"loss_real": loss_real.item(), "loss_fake": loss_fake.item(), "r1_penalty": loss_r1,
+                "r2_penalty": loss_r2}
 
     def train_generator(self, batch_real: Data[torch.Tensor]):
         self.generator.zero_grad()

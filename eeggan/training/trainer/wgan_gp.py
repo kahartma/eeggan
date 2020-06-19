@@ -70,7 +70,8 @@ class WganGpTrainer(Trainer):
 
         self.optimizer_disc.step()
 
-        return loss_real.item(), loss_fake.item(), loss_penalty, loss_drift, loss_center
+        return {"loss_real": loss_real.item(), "loss_fake": loss_fake.item(), "gp": loss_penalty,
+                "drift_penalty": loss_drift, "center_penalty": loss_center}
 
     def train_generator(self, batch_real: Data[torch.Tensor]):
         self.generator.zero_grad()

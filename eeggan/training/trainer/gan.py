@@ -39,7 +39,7 @@ class GanTrainer(Trainer):
 
         self.optimizer_disc.step()
 
-        return loss_real.item(), loss_fake.item()
+        return {"loss_real": loss_real.item(), "loss_fake": loss_fake.item()}
 
     def train_generator(self, batch_real: Data[torch.Tensor]):
         self.generator.zero_grad()
