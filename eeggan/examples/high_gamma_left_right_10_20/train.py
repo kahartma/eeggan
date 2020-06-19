@@ -40,6 +40,7 @@ n_stages = 6  # number of progressive stages
 n_epochs_per_stage = 2000  # epochs in each progressive stage
 plot_every_epoch = 50
 n_epochs_fade = int(0.1 * n_epochs_per_stage)
+use_fade = True
 
 n_latent = 200  # latent vector size
 lr_d = 0.005  # discriminator learning rate
@@ -83,7 +84,7 @@ if __name__ == '__main__':
                'optimizer_discriminator': optimizer_discriminator, 'optimizer_generator': optimizer_generator}
 
     # handles potential progression after each epoch
-    progression_handler = ProgressionHandler(discriminator, generator, n_stages, True, epochs_fade=n_epochs_fade)
+    progression_handler = ProgressionHandler(discriminator, generator, n_stages, use_fade, epochs_fade=n_epochs_fade)
     progression_handler.set_progression(0, 1.)
     trainer.add_event_handler(Events.EPOCH_COMPLETED(every=1), progression_handler.advance_alpha)
 
@@ -102,7 +103,8 @@ if __name__ == '__main__':
         # initiate spectral plotter
         spectral_plot = SpectralPlot(pyplot.figure(), PLOT_PATH, "spectral_stage_%d_" % stage, X_block.shape[2],
                                      orig_fs / sample_factor)
-        spectral_handler = trainer.add_event_handler(Events.EPOCH_COMPLETED(every=plot_every_epoch), spectral_plot)
+        event_name = Events.EPOCH_COMPLETED(every=plot_every_epoch)
+        spectral_handler = trainer.add_event_handler(event_name, spectral_plot)
 
         # initiate metrics
         metric_wasserstein = WassersteinMetric(100, np.prod(X_block.shape[1:]).item())
@@ -119,15 +121,15 @@ if __name__ == '__main__':
 
         # train stage
         state = trainer.run(train_loader, (stage + 1) * n_epochs_per_stage)
+        trainer.remove_event_handler(spectral_plot, event_name)  # spectral_handler.remove() does not work :(
 
         # save stuff
         torch.save(to_save, os.path.join(RESULT_PATH, 'modules_stage_%d.pt' % stage))
-        torch.save(trainer.state.metrics, os.path.join(RESULT_PATH, 'metrics_stage_%d.pt' % stage))
         torch.save(dict([(name, to_save[name].state_dict()) for name in to_save.keys()]),
                    os.path.join(RESULT_PATH, 'states_stage_%d.pt' % stage))
+        torch.save(trainer.state.metrics, os.path.join(RESULT_PATH, 'metrics_stage_%d.pt' % stage))
 
         # advance stage of not last
-        spectral_handler.remove()
         trainer.detach_metrics(metrics, usage)
         if stage != n_stages - 1:
             progression_handler.advance_stage()

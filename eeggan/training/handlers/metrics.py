@@ -74,14 +74,16 @@ class InceptionMetric(ListMetric[Tuple[float, float]]):
                                 upsample(batch_output.batch_fake.X.data.cpu().numpy(), self.upsample_factor, axis=2)))
         X_fake = X_fake[:, :, :, None]
         epoch = batch_output.i_epoch
-        scores = []
+        score_means = []
+        score_stds = []
         for deep4 in self.deep4s:
             with torch.no_grad():
                 preds = deep4(X_fake)
                 preds = logsoftmax_act_to_softmax(preds.data.cpu().numpy())
-                score = calculate_inception_score(preds, self.splits, self.repetitions)
-                scores.append(score)
-        self.append((epoch, (np.mean(scores).item(), np.std(scores).item())))
+                score_mean, score_std = calculate_inception_score(preds, self.splits, self.repetitions)
+            score_means.append(score_mean)
+            score_stds.append(score_std)
+        self.append((epoch, (np.mean(score_means).item(), np.mean(score_stds).item())))
 
 
 class FrechetMetric(ListMetric[Tuple[float, float]]):
