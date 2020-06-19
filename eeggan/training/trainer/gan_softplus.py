@@ -3,7 +3,6 @@
 import torch
 from torch import autograd
 from torch.nn.functional import softplus
-from torch.optim.optimizer import Optimizer
 
 from eeggan.cuda.cuda import to_device
 from eeggan.data.data import Data
@@ -14,17 +13,15 @@ from eeggan.training.trainer.trainer import Trainer
 
 class GanSoftplusTrainer(Trainer):
 
-    def __init__(self, discriminator: Discriminator, generator: Generator, r1_gamma: float, r2_gamma: float,
-                 i_logging: int, optimizer_disc: Optimizer, optimizer_gen: Optimizer):
+    def __init__(self, i_logging: int, discriminator: Discriminator, generator: Generator, r1_gamma: float,
+                 r2_gamma: float):
         self.r1_gamma = r1_gamma
         self.r2_gamma = r2_gamma
-        self.optimizer_disc = optimizer_disc
-        self.optimizer_gen = optimizer_gen
-        super().__init__(discriminator, generator, i_logging)
+        super().__init__(i_logging, discriminator, generator)
 
     def train_discriminator(self, batch_real: Data[torch.Tensor], batch_fake: Data[torch.Tensor], latent: torch.Tensor):
         self.discriminator.zero_grad()
-        self.optimizer_disc.zero_grad()
+        self.optim_discriminator.zero_grad()
         self.discriminator.train(True)
 
         batch_real.X.detach()
@@ -58,14 +55,14 @@ class GanSoftplusTrainer(Trainer):
             r2_penalty.backward()
             loss_r2 = r2_penalty.item()
 
-        self.optimizer_disc.step()
+        self.optim_discriminator.step()
 
         return {"loss_real": loss_real.item(), "loss_fake": loss_fake.item(), "r1_penalty": loss_r1,
                 "r2_penalty": loss_r2}
 
     def train_generator(self, batch_real: Data[torch.Tensor]):
         self.generator.zero_grad()
-        self.optimizer_gen.zero_grad()
+        self.optim_generator.zero_grad()
         self.generator.train(True)
         self.discriminator.train(False)
 
@@ -80,7 +77,7 @@ class GanSoftplusTrainer(Trainer):
         loss = softplus(-fx_fake).mean()
         loss.backward()
 
-        self.optimizer_gen.step()
+        self.optim_generator.step()
 
         return loss.item()
 

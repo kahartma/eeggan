@@ -3,7 +3,6 @@
 import torch
 from torch import sigmoid
 from torch.nn import BCELoss
-from torch.optim.optimizer import Optimizer
 
 from eeggan.cuda.cuda import to_device
 from eeggan.data.data import Data
@@ -14,17 +13,13 @@ from eeggan.training.trainer.trainer import Trainer
 
 class GanTrainer(Trainer):
 
-    def __init__(self, discriminator: Discriminator, generator: Generator, i_logging,
-                 optimizer_disc: Optimizer,
-                 optimizer_gen: Optimizer):
+    def __init__(self, i_logging, discriminator: Discriminator, generator: Generator):
         self.loss = BCELoss()
-        self.optimizer_disc = optimizer_disc
-        self.optimizer_gen = optimizer_gen
-        super().__init__(discriminator, generator, i_logging)
+        super().__init__(i_logging, discriminator, generator)
 
     def train_discriminator(self, batch_real: Data[torch.Tensor], batch_fake: Data[torch.Tensor], latent: torch.Tensor):
         self.discriminator.zero_grad()
-        self.optimizer_disc.zero_grad()
+        self.optim_discriminator.zero_grad()
         self.discriminator.train(True)
 
         fx_real = sigmoid(self.discriminator(batch_real.X.requires_grad_(False), y=batch_real.y.requires_grad_(False),
@@ -37,13 +32,13 @@ class GanTrainer(Trainer):
         loss_fake = self.loss(fx_fake, torch.zeros_like(fx_real))
         loss_fake.backward()
 
-        self.optimizer_disc.step()
+        self.optim_discriminator.step()
 
         return {"loss_real": loss_real.item(), "loss_fake": loss_fake.item()}
 
     def train_generator(self, batch_real: Data[torch.Tensor]):
         self.generator.zero_grad()
-        self.optimizer_gen.zero_grad()
+        self.optim_generator.zero_grad()
         self.generator.train(True)
         self.discriminator.train(False)
 
@@ -58,6 +53,6 @@ class GanTrainer(Trainer):
         loss = self.loss(fx_fake, torch.ones_like(fx_fake))
         loss.backward()
 
-        self.optimizer_gen.step()
+        self.optim_generator.step()
 
         return loss.item()

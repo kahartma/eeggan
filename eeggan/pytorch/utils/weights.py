@@ -11,10 +11,6 @@ def weight_filler(m):
         m.weight.data.normal_(0.0, 1.)  # From progressive GAN paper
         if m.bias is not None:
             m.bias.data.fill_(0.)
-    elif classname.find('ConditionalBatchNorm') != -1:
-        for l in m.bn_layers:
-            l.weight.data.normal_(1.0, 0.02)
-            l.bias.data.fill_(0.)
     elif classname.find('BatchNorm') != -1 or classname.find('LayerNorm') != -1:
         if m.weight is not None:
             m.weight.data.normal_(1.0, 0.02)

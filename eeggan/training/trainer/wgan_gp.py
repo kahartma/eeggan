@@ -1,7 +1,6 @@
 #  Author: Kay Hartmann <kg.hartma@gmail.com>
 import torch
 from torch import autograd
-from torch.optim.optimizer import Optimizer
 
 from eeggan.cuda.cuda import to_device
 from eeggan.data.data import Data
@@ -11,27 +10,24 @@ from eeggan.training.trainer.trainer import Trainer
 
 class WganGpTrainer(Trainer):
 
-    def __init__(self, discriminator: Discriminator, generator: torch.Generator, i_logging,
-                 optimizer_disc: Optimizer,
-                 optimizer_gen: Optimizer, lambd: float, one_sided_penalty: bool, distance_weighting: bool,
+    def __init__(self, i_logging, discriminator: Discriminator, generator: torch.Generator, lambd: float,
+                 one_sided_penalty: bool, distance_weighting: bool,
                  eps_drift: float, eps_center: float):
-        self.optimizer_disc = optimizer_disc
-        self.optimizer_gen = optimizer_gen
         self.lambd = lambd
         self.one_sided_penalty = one_sided_penalty
         self.distance_weighting = distance_weighting
         self.eps_drift = eps_drift
         self.eps_center = eps_center
-        super().__init__(discriminator, generator, i_logging)
+        super().__init__(i_logging, discriminator, generator)
 
     def train_discriminator(self, batch_real: Data[torch.Tensor], batch_fake: Data[torch.Tensor], latent: torch.Tensor):
         self.discriminator.zero_grad()
-        self.optimizer_disc.zero_grad()
+        self.optim_discriminator.zero_grad()
         self.discriminator.train(True)
 
         fx_real = self.discriminator(batch_real.X.requires_grad_(False), y=batch_real.y.requires_grad_(False),
                                      y_onehot=batch_real.y_onehot.requires_grad_(False))
-        loss_real = fx_real.mean()
+        loss_real = -fx_real.mean()
         loss_real.backward(retain_graph=(self.eps_drift > 0 or self.eps_center > 0))
 
         fx_fake = self.discriminator(batch_fake.X.requires_grad_(False), y=batch_fake.y.requires_grad_(False),
@@ -45,18 +41,11 @@ class WganGpTrainer(Trainer):
             loss_drift = self.eps_drift * loss_real ** 2
             loss_drift.backward(retain_graph=self.eps_center > 0)
             loss_drift = loss_drift.item()
-            loss_drift = loss_drift.item()
         if self.eps_center > 0:
             loss_center = (loss_real + loss_fake)
             loss_center = self.eps_center * loss_center ** 2
             loss_center.backward()
-            loss_center = loss_center
             loss_center = loss_center.item()
-
-        dist = 1
-        if self.distance_weighting:
-            dist = (loss_real - loss_fake).detach()
-            dist = dist.clamp(min=0)
 
         loss_penalty = None
         if self.lambd > 0.:
@@ -64,18 +53,23 @@ class WganGpTrainer(Trainer):
                                                       batch_fake.X.requires_grad_(True),
                                                       batch_real.y_onehot.requires_grad_(True),
                                                       batch_fake.y_onehot.requires_grad_(True))
+            dist = 1
+            if self.distance_weighting:
+                dist = (loss_real - loss_fake).detach()
+                dist = dist.clamp(min=0)
+
             loss_penalty = self.lambd * dist * loss_penalty
             loss_penalty.backward()
             loss_penalty = loss_penalty.item()
 
-        self.optimizer_disc.step()
+        self.optim_discriminator.step()
 
         return {"loss_real": loss_real.item(), "loss_fake": loss_fake.item(), "gp": loss_penalty,
                 "drift_penalty": loss_drift, "center_penalty": loss_center}
 
     def train_generator(self, batch_real: Data[torch.Tensor]):
         self.generator.zero_grad()
-        self.optimizer_gen.zero_grad()
+        self.optim_generator.zero_grad()
         self.generator.train(True)
         self.discriminator.train(False)
 
@@ -89,7 +83,7 @@ class WganGpTrainer(Trainer):
                                      y_onehot=batch_fake.y_onehot.requires_grad_(True))
         loss = fx_fake.mean()
         loss.backward()
-        self.optimizer_gen.step()
+        self.optim_generator.step()
 
         return loss.item()
 
@@ -98,19 +92,17 @@ class WganGpTrainer(Trainer):
         """
         Improved WGAN gradient penalty
         """
-        alpha_tmp = torch.rand(X_real.data.size(0), *((len(X_real.data.size()) - 1) * [1]), device=X_real.device,
-                               requires_grad=True)
-        alpha = alpha_tmp.expand(X_real.data.size())
+        alpha_tmp = torch.rand(X_real.size(0)).to(X_real)
+        alpha_X = alpha_tmp[:, None, None].expand_as(X_real)
+        interpolates = alpha_X * X_real + ((1 - alpha_X) * X_fake)
 
         interpolates_y = None
         if y_real is not None and y_fake is not None:
-            alpha_y = alpha_tmp.squeeze()[:, None].expand_as(y_real)
-            interpolates_y = alpha_y * y_real.data + ((1 - alpha_y) * y_fake.data)
+            alpha_y = alpha_tmp[:, None].expand_as(y_real)
+            interpolates_y = alpha_y * y_real + ((1 - alpha_y) * y_fake)
 
-        interpolates = alpha * X_real.data + ((1 - alpha) * X_fake.data)
-
-        disc_interpolates = self.discriminator(interpolates, y_onehot=interpolates_y)
-
+        disc_interpolates = self.discriminator(interpolates.requires_grad_(True),
+                                               y_onehot=interpolates_y.requires_grad_(True))
         ones = torch.ones_like(disc_interpolates)
 
         if interpolates_y is not None:
@@ -122,9 +114,9 @@ class WganGpTrainer(Trainer):
                                   grad_outputs=ones,
                                   create_graph=True, retain_graph=True, only_inputs=True, allow_unused=True)
 
-        gradients = torch.cat([tmp.reshape(tmp.size(0), -1) for tmp in gradients], 1)
+        gradients = torch.cat([grad.reshape(grad.size(0), -1) for grad in gradients], dim=1)
 
-        tmp = (gradients.norm(2, dim=1) - 1)
+        tmp = gradients.norm(2, dim=1) - 1
         if self.one_sided_penalty:
             tmp = tmp.clamp(min=0)
         gradient_penalty = (tmp ** 2).mean()

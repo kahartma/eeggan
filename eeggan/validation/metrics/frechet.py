@@ -2,48 +2,54 @@
 
 from typing import Tuple
 
-import numpy as np
-import scipy as sp
 import torch
 
-from eeggan.cuda.cuda import to_cuda, get_activate_cuda
+from eeggan.cuda.cuda import to_cuda
 
 
-def calculate_activation_statistics(act: torch.Tensor) -> Tuple[np.ndarray, np.ndarray]:
-    act = act.reshape(act.shape[0], -1)
-    if get_activate_cuda():
+def calculate_activation_statistics(act: torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor]:
+    with torch.no_grad():
+        act = act.reshape(act.shape[0], -1)
         fact = act.shape[0] - 1
         act = to_cuda(act)
         mu = torch.mean(act, dim=0, keepdim=True)
         act = act - mu.expand_as(act)
         sigma = act.t().mm(act) / fact
-        mu = mu.data.cpu().numpy().squeeze()
-        sigma = sigma.data.cpu().numpy().squeeze()
-    else:
-        mu = np.mean(act, axis=0)
-        sigma = np.cov(act, rowvar=False)
-    return mu, sigma
+        return mu, sigma
 
 
 # From https://github.com/tkarras/progressive_growing_of_gans/blob/master/metrics/frechet_inception_distance.py
-def calculate_frechet_distance(mu1: np.ndarray, sigma1: np.ndarray, mu2: np.ndarray, sigma2: np.ndarray) -> float:
+def calculate_frechet_distances(mu1: torch.Tensor, sigma1: torch.Tensor, mu2: torch.Tensor,
+                                sigma2: torch.Tensor) -> torch.Tensor:
     """Numpy implementation of the Frechet Distance.
     The Frechet distance between two multivariate Gaussians X_1 ~ N(mu_1, C_1)
     and X_2 ~ N(mu_2, C_2) is
-            d^2 = ||mu_1 - mu_2||^2 + Tr(C_1 + C_2 - 2*sqrt(C_1*C_2)).
-    Params:
-    -- mu1 : Numpy array containing the activations of the pool_3 layer of the
-             inception net ( like returned by the function 'get_predictions')
-    -- mu2   : The sample mean over activations of the pool_3 layer, precalcualted
-               on an representive data set.
-    -- sigma2: The covariance matrix over activations of the pool_3 layer,
-               precalcualted on an representive data set.
     Returns:
     -- dist  : The Frechet Distance.
     Raises:
     -- InvalidFIDException if nan occures.
     """
-    m = np.square(mu1 - mu2).sum()
-    s, _ = sp.linalg.sqrtm(np.dot(sigma1, sigma2), disp=False)
-    dist = m + np.trace(sigma1 + sigma2 - 2 * s)
-    return np.real(dist).item()
+    with torch.no_grad():
+        m = torch.square(mu1 - mu2).sum()
+        d = torch.bmm(sigma1, sigma2)
+        s = sqrtm_newton(d)
+        dists = m + torch.diagonal(sigma1 + sigma2 - 2 * s, dim1=-2, dim2=-1).sum(-1)
+        return dists
+
+
+# https://colab.research.google.com/drive/1wSO1MFh_ZCfOnejFnW1vkD71jaJy2Olu#scrollTo=Ju79uoiTQku6&line=1&uniqifier=1
+def sqrtm_newton(A: torch.Tensor) -> torch.Tensor:
+    with torch.no_grad():
+        numIters = 20
+        batchSize = A.shape[0]
+        dim = A.shape[1]
+        normA = A.mul(A).sum(dim=1).sum(dim=1).sqrt()
+        Y = A.div(normA.view(batchSize, 1, 1).expand_as(A));
+        I = torch.eye(dim, dim).view(1, dim, dim).repeat(batchSize, 1, 1).type(A.dtype).to(A)
+        Z = torch.eye(dim, dim).view(1, dim, dim).repeat(batchSize, 1, 1).type(A.dtype).to(A)
+        for i in range(numIters):
+            T = 0.5 * (3.0 * I - Z.bmm(Y))
+            Y = Y.bmm(T)
+            Z = T.bmm(Z)
+        sA = Y * torch.sqrt(normA).view(batchSize, 1, 1).expand_as(A)
+        return sA

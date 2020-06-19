@@ -8,7 +8,7 @@ from matplotlib import pyplot
 from eeggan.plotting.plots import labeled_plot, labeled_tube_plot
 
 SUBJ_IND = 1
-RESULT_PATH = "/home/khartmann/projects/eeggandata/results/%d" % SUBJ_IND
+RESULT_PATH = "/home/khartmann/projects/eeggandata/results/%d/style" % SUBJ_IND
 STAGE = 0
 
 if __name__ == '__main__':

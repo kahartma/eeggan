@@ -7,6 +7,7 @@ import torch
 from ignite.engine import Engine, Events
 from ignite.metrics import Metric, MetricUsage
 from numpy.random.mtrand import RandomState
+from torch.optim.optimizer import Optimizer
 
 from eeggan.cuda.cuda import to_device
 from eeggan.data.data import Data
@@ -30,16 +31,22 @@ class BatchOutput:
 class Trainer(Engine, metaclass=ABCMeta):
     def __init__(
             self,
+            i_logging: int,
             discriminator: Discriminator,
             generator: Generator,
-            i_logging: int,
             rng: RandomState = RandomState()
     ):
         self.discriminator = discriminator
         self.generator = generator
         self.rng = rng
+        self.optim_discriminator: Optimizer = None
+        self.optim_generator: Optimizer = None
         Engine.__init__(self, self.train_batch)
         self.add_event_handler(Events.ITERATION_COMPLETED(every=i_logging), self.log_training)
+
+    def set_optimizers(self, optim_discriminator: Optimizer, optim_generator: Optimizer):
+        self.optim_discriminator = optim_discriminator
+        self.optim_generator = optim_generator
 
     def attach_metrics(self, metrics: List[Metric], metric_names: List[str], usage: MetricUsage):
         for i, metric in enumerate(metrics):
