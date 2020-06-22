@@ -58,7 +58,7 @@ class WassersteinMetric(ListMetric[float]):
 
 class InceptionMetric(ListMetric[Tuple[float, float]]):
 
-    def __init__(self, deep4s: List[Module], upsample_factor, splits: int = 1, repetitions: int = 100):
+    def __init__(self, deep4s: List[Module], upsample_factor: float, splits: int = 1, repetitions: int = 100):
         self.deep4s = deep4s
         self.upsample_factor = upsample_factor
         self.splits = splits
@@ -88,7 +88,7 @@ class InceptionMetric(ListMetric[Tuple[float, float]]):
 
 class FrechetMetric(ListMetric[Tuple[float, float]]):
 
-    def __init__(self, deep4s: List[Module], upsample_factor):
+    def __init__(self, deep4s: List[Module], upsample_factor: float):
         self.deep4s = deep4s
         self.upsample_factor = upsample_factor
         super().__init__()
@@ -117,6 +117,32 @@ class FrechetMetric(ListMetric[Tuple[float, float]]):
                                                    sig_fake[None, :, :]).item()
                 dists.append(dist)
             self.append((epoch, (np.mean(dists).item(), np.std(dists).item())))
+
+
+class ClassificationMetric(ListMetric[Tuple[float, float]]):
+
+    def __init__(self, deep4s: List[Module], upsample_factor: float):
+        self.deep4s = deep4s
+        self.upsample_factor = upsample_factor
+        super().__init__()
+
+    def reset(self) -> None:
+        super().reset()
+
+    def update(self, batch_output: BatchOutput) -> None:
+        X_fake, = to_device(batch_output.batch_fake.X.device,
+                            Tensor(
+                                upsample(batch_output.batch_fake.X.data.cpu().numpy(), self.upsample_factor, axis=2)))
+        X_fake = X_fake[:, :, :, None]
+        epoch = batch_output.i_epoch
+        accuracies = []
+        for deep4 in self.deep4s:
+            with torch.no_grad():
+                preds: Tensor = deep4(X_fake)[1].squeeze()
+                class_pred = preds.argmax(dim=1)
+                accuracy = (class_pred == batch_output.batch_fake.y).type(torch.float).mean()
+                accuracies.append(accuracy.item())
+        self.append((epoch, (np.mean(accuracies).item(), np.std(accuracies).item())))
 
 
 class LossMetric(ListMetric[Dict]):

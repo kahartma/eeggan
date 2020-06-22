@@ -17,6 +17,7 @@ if __name__ == '__main__':
     metric_inception = np.asarray(metrics["inception"])
     metric_frechet = np.asarray(metrics["frechet"])
     metric_loss = metrics["loss"]
+    metric_classification = np.asarray(metrics["classification"])
 
     fig = pyplot.figure()
     labeled_plot(
@@ -44,5 +45,15 @@ if __name__ == '__main__':
         [np.asarray([np.asarray(t, dtype=float) for t in metric_frechet[:, 1]], dtype=float)[:, 1]],
         ["fake"],
         "Frechet Distance", "Epochs", "distance", fig.gca()
+    )
+    pyplot.show()
+
+    fig = pyplot.figure()
+    labeled_tube_plot(
+        metric_classification[:, 0].astype(float),
+        [np.asarray([np.asarray(t, dtype=float) for t in metric_classification[:, 1]], dtype=float)[:, 0]],
+        [np.asarray([np.asarray(t, dtype=float) for t in metric_classification[:, 1]], dtype=float)[:, 1]],
+        ["fake"],
+        "Classification Accuracy", "Epochs", "accuracy %", fig.gca()
     )
     pyplot.show()

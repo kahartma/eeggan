@@ -20,7 +20,8 @@ from eeggan.examples.high_gamma_rest_right_10_20.baseline_style import create_pr
     create_progressive_discriminator_blocks
 from eeggan.examples.high_gamma_rest_right_10_20.make_data import DATASET_PATH, DEEP4_PATH
 from eeggan.pytorch.utils.weights import weight_filler
-from eeggan.training.handlers.metrics import WassersteinMetric, InceptionMetric, FrechetMetric, LossMetric
+from eeggan.training.handlers.metrics import WassersteinMetric, InceptionMetric, FrechetMetric, LossMetric, \
+    ClassificationMetric
 from eeggan.training.handlers.plots import SpectralPlot
 from eeggan.training.progressive.discriminator import ProgressiveDiscriminator
 from eeggan.training.progressive.generator import ProgressiveGenerator
@@ -117,8 +118,9 @@ if __name__ == '__main__':
         metric_inception = InceptionMetric(deep4s, sample_factor)
         metric_frechet = FrechetMetric(deep4s, sample_factor)
         metric_loss = LossMetric()
-        metrics = [metric_wasserstein, metric_inception, metric_frechet, metric_loss]
-        metric_names = ["wasserstein", "inception", "frechet", "loss"]
+        metric_classification = ClassificationMetric(deep4s, sample_factor)
+        metrics = [metric_wasserstein, metric_inception, metric_frechet, metric_loss, metric_classification]
+        metric_names = ["wasserstein", "inception", "frechet", "loss", "classification"]
         trainer.attach_metrics(metrics, metric_names, usage_metrics)
 
         # wrap into cuda loader
