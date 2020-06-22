@@ -13,7 +13,7 @@ from braindecode.mne_ext.signalproc import resample_cnt, mne_apply
 
 from eeggan.data.preprocess.resample import upsample, downsample
 from eeggan.data.preprocess.util import prepare_data
-from eeggan.examples.high_gamma_left_right_10_20.braindecode_hack import BBCIDataset
+from eeggan.examples.high_gamma_rest_right_10_20.braindecode_hack import BBCIDataset
 from eeggan.validation.deep4 import train_completetrials
 
 SUBJ_INDECES = np.arange(1, 15)
