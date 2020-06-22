@@ -28,7 +28,7 @@ from eeggan.training.progressive.handler import ProgressionHandler
 from eeggan.training.trainer.gan_softplus import GanSoftplusTrainer
 
 SUBJ_IND = 1
-RESULT_PATH = "/home/khartmann/projects/eeggandata/results/%d" % SUBJ_IND
+RESULT_PATH = "/home/khartmann/projects/eeggandata/results/%d/train" % SUBJ_IND
 PLOT_PATH = os.path.join(RESULT_PATH, "plots")
 os.makedirs(PLOT_PATH, exist_ok=True)
 

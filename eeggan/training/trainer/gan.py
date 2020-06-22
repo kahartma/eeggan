@@ -9,6 +9,7 @@ from eeggan.data.data import Data
 from eeggan.training.discriminator import Discriminator
 from eeggan.training.generator import Generator
 from eeggan.training.trainer.trainer import Trainer
+from eeggan.training.trainer.utils import detach_all
 
 
 class GanTrainer(Trainer):
@@ -42,14 +43,17 @@ class GanTrainer(Trainer):
         self.generator.train(True)
         self.discriminator.train(False)
 
-        latent, y_fake, y_onehot_fake = to_device(batch_real.X.device,
-                                                  *self.generator.create_latent_input(self.rng, len(batch_real.X)))
+        with torch.no_grad():
+            latent, y_fake, y_onehot_fake = to_device(batch_real.X.device,
+                                                      *self.generator.create_latent_input(self.rng, len(batch_real.X)))
+            latent, y_fake, y_onehot_fake = detach_all(latent, y_fake, y_onehot_fake)
+
         X_fake = self.generator(latent.requires_grad_(False), y=y_fake.requires_grad_(False),
                                 y_onehot=y_onehot_fake.requires_grad_(False))
-        batch_fake = Data[torch.Tensor](X_fake, y_fake, y_onehot_fake)
 
-        fx_fake = sigmoid(self.discriminator(batch_fake.X.requires_grad_(False), y=batch_fake.y.requires_grad_(False),
-                                             y_onehot=batch_fake.y_onehot.requires_grad_(False)))
+        batch_fake = Data[torch.Tensor](X_fake, y_fake, y_onehot_fake)
+        fx_fake = sigmoid(self.discriminator(batch_fake.X.requires_grad_(True), y=batch_fake.y.requires_grad_(True),
+                                             y_onehot=batch_fake.y_onehot.requires_grad_(True)))
         loss = self.loss(fx_fake, torch.ones_like(fx_fake))
         loss.backward()
 

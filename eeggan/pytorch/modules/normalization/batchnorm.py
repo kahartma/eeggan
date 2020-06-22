@@ -15,9 +15,9 @@ class ConditionalBatchNorm1d(Module):
         self.bn_layers = nn.ModuleList(layers)
         self.n_classes = n_classes
 
-    def forward(self, x, y=None, **kwargs):
+    def forward(self, x, y_onehot=None, **kwargs):
         for c in range(self.n_classes):
-            c_indx = np.where(y.cpu().data.numpy()[:, c] == 1)[0]
+            c_indx = np.where(y_onehot.cpu().data.numpy()[:, c] == 1)[0]
             tmp = self.bn_layers[c](x[c_indx.tolist(), :, :])
             x[c_indx, :, :] = tmp
         return x

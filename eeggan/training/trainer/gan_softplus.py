@@ -9,9 +9,20 @@ from eeggan.data.data import Data
 from eeggan.training.discriminator import Discriminator
 from eeggan.training.generator import Generator
 from eeggan.training.trainer.trainer import Trainer
+from eeggan.training.trainer.utils import detach_all
 
 
 class GanSoftplusTrainer(Trainer):
+    """
+    Improved GAN
+
+    References
+    ----------
+    Salimans, T., Goodfellow, I., Zaremba, W., Cheung, V., Radford, A., &
+    Chen, X. (2016). Improved Techniques for Training GANs. Learning;
+    Computer Vision and Pattern Recognition; Neural and Evolutionary Computing.
+    Retrieved from http://arxiv.org/abs/1606.03498
+    """
 
     def __init__(self, i_logging: int, discriminator: Discriminator, generator: Generator, r1_gamma: float,
                  r2_gamma: float):
@@ -23,13 +34,6 @@ class GanSoftplusTrainer(Trainer):
         self.discriminator.zero_grad()
         self.optim_discriminator.zero_grad()
         self.discriminator.train(True)
-
-        batch_real.X.detach()
-        batch_real.y.detach()
-        batch_real.y_onehot.detach()
-        batch_fake.X.detach()
-        batch_fake.y.detach()
-        batch_fake.y_onehot.detach()
 
         has_r1 = self.r1_gamma > 0.
         fx_real = self.discriminator(batch_real.X.requires_grad_(has_r1), y=batch_real.y.requires_grad_(has_r1),
@@ -66,8 +70,11 @@ class GanSoftplusTrainer(Trainer):
         self.generator.train(True)
         self.discriminator.train(False)
 
-        latent, y_fake, y_onehot_fake = to_device(batch_real.X.device,
-                                                  *self.generator.create_latent_input(self.rng, len(batch_real.X)))
+        with torch.no_grad():
+            latent, y_fake, y_onehot_fake = to_device(batch_real.X.device,
+                                                      *self.generator.create_latent_input(self.rng, len(batch_real.X)))
+            latent, y_fake, y_onehot_fake = detach_all(latent, y_fake, y_onehot_fake)
+
         X_fake = self.generator(latent.requires_grad_(False), y=y_fake.requires_grad_(False),
                                 y_onehot=y_onehot_fake.requires_grad_(False))
         batch_fake = Data[torch.Tensor](X_fake, y_fake, y_onehot_fake)

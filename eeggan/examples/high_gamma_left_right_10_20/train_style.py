@@ -28,7 +28,7 @@ from eeggan.training.progressive.handler import ProgressionHandler
 from eeggan.training.trainer.gan_softplus import GanSoftplusTrainer
 
 SUBJ_IND = 1
-RESULT_PATH = "/home/khartmann/projects/eeggandata/results/%d/style" % SUBJ_IND
+RESULT_PATH = "/home/khartmann/projects/eeggandata/results/%d/train_style" % SUBJ_IND
 PLOT_PATH = os.path.join(RESULT_PATH, "plots")
 os.makedirs(PLOT_PATH, exist_ok=True)
 
@@ -40,7 +40,7 @@ final_fs = orig_fs / 2  # reduced sampling rate of data
 n_batch = 128  # batch size
 n_stages = 6  # number of progressive stages
 n_epochs_per_stage = 2000  # epochs in each progressive stage
-n_epochs_metrics = 2000
+n_epochs_metrics = 50
 plot_every_epoch = 50
 n_epochs_fade = int(0.1 * n_epochs_per_stage)
 use_fade = False

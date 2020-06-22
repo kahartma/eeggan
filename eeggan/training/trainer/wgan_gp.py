@@ -6,6 +6,7 @@ from eeggan.cuda import to_device
 from eeggan.data.data import Data
 from eeggan.training.discriminator import Discriminator
 from eeggan.training.trainer.trainer import Trainer
+from eeggan.training.trainer.utils import detach_all
 
 
 class WganGpTrainer(Trainer):
@@ -73,15 +74,18 @@ class WganGpTrainer(Trainer):
         self.generator.train(True)
         self.discriminator.train(False)
 
-        latent, y_fake, y_onehot_fake = to_device(batch_real.X.device,
-                                                  *self.generator.create_latent_input(self.rng, len(batch_real.X)))
+        with torch.no_grad():
+            latent, y_fake, y_onehot_fake = to_device(batch_real.X.device,
+                                                      *self.generator.create_latent_input(self.rng, len(batch_real.X)))
+            latent, y_fake, y_onehot_fake = detach_all(latent, y_fake, y_onehot_fake)
+
         X_fake = self.generator(latent.requires_grad_(False), y=y_fake.requires_grad_(False),
                                 y_onehot=y_onehot_fake.requires_grad_(False))
-        batch_fake = Data[torch.Tensor](X_fake, y_fake, y_onehot_fake)
 
+        batch_fake = Data[torch.Tensor](X_fake, y_fake, y_onehot_fake)
         fx_fake = self.discriminator(batch_fake.X.requires_grad_(True), y=batch_fake.y.requires_grad_(True),
                                      y_onehot=batch_fake.y_onehot.requires_grad_(True))
-        loss = fx_fake.mean()
+        loss = -fx_fake.mean()
         loss.backward()
         self.optim_generator.step()
 
@@ -101,6 +105,7 @@ class WganGpTrainer(Trainer):
             alpha_y = alpha_tmp[:, None].expand_as(y_real)
             interpolates_y = alpha_y * y_real + ((1 - alpha_y) * y_fake)
 
+        interpolates, interpolates_y = detach_all(interpolates, interpolates_y)
         disc_interpolates = self.discriminator(interpolates.requires_grad_(True),
                                                y_onehot=interpolates_y.requires_grad_(True))
         ones = torch.ones_like(disc_interpolates)

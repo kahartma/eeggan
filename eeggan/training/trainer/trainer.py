@@ -13,6 +13,7 @@ from eeggan.cuda import to_device
 from eeggan.data.data import Data
 from eeggan.training.discriminator import Discriminator
 from eeggan.training.generator import Generator
+from eeggan.training.trainer.utils import detach_all
 
 
 class BatchOutput:
@@ -57,22 +58,26 @@ class Trainer(Engine, metaclass=ABCMeta):
             metric.detach(self, usage)
 
     def train_batch(self, engine, batch) -> BatchOutput:
-        batch_real = Data[torch.Tensor](batch[0], batch[1], batch[2])
-
-        latent, y_fake, y_onehot_fake = to_device(batch_real.X.device,
-                                                  *self.generator.create_latent_input(self.rng, len(batch_real.X)))
         with torch.no_grad():
+            batch_real = Data[torch.Tensor](batch[0], batch[1], batch[2])
+
+            latent, y_fake, y_onehot_fake = to_device(batch_real.X.device,
+                                                      *self.generator.create_latent_input(self.rng, len(batch_real.X)))
             X_fake = self.generator(latent, y=y_fake, y_onehot=y_onehot_fake)
             batch_fake = Data[torch.Tensor](X_fake, y_fake, y_onehot_fake)
-        loss_d = self.train_discriminator(batch_real, batch_fake, latent)
 
+        batch_real, batch_fake, latent = detach_all(batch_real, batch_fake, latent)
+        loss_d = self.train_discriminator(batch_real, batch_fake, latent)
+        batch_real = detach_all(batch_real)
         loss_g = self.train_generator(batch_real)
 
-        latent, y_fake, y_onehot_fake = to_device(batch_real.X.device,
-                                                  *self.generator.create_latent_input(self.rng, len(batch_real.X)))
         with torch.no_grad():
+            latent, y_fake, y_onehot_fake = to_device(batch_real.X.device,
+                                                      *self.generator.create_latent_input(self.rng, len(batch_real.X)))
             X_fake = self.generator(latent, y=y_fake, y_onehot=y_onehot_fake)
             batch_fake = Data[torch.Tensor](X_fake, y_fake, y_onehot_fake)
+
+        batch_real, batch_fake, latent = detach_all(batch_real, batch_fake, latent)
         return BatchOutput(engine.state.iteration, engine.state.epoch, batch_real, batch_fake, latent, loss_d, loss_g)
 
     def log_training(self, engine):

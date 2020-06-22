@@ -28,30 +28,29 @@ from eeggan.training.progressive.handler import ProgressionHandler
 from eeggan.training.trainer.wgan_gp import WganGpTrainer
 
 SUBJ_IND = 1
-RESULT_PATH = "/home/khartmann/projects/eeggandata/results/%d/style_wgan_gp" % SUBJ_IND
+RESULT_PATH = "/home/khartmann/projects/eeggandata/results/%d/train_style_wgan_gp" % SUBJ_IND
 PLOT_PATH = os.path.join(RESULT_PATH, "plots")
 os.makedirs(PLOT_PATH, exist_ok=True)
 
 n_chans = 21  # number of channels in data
 n_classes = 2  # number of classes in data
 orig_fs = 512.  # sampling rate of data
-final_fs = orig_fs / 2  # reduced sampling rate of data
 
 n_batch = 128  # batch size
 n_stages = 6  # number of progressive stages
 n_epochs_per_stage = 2000  # epochs in each progressive stage
-n_epochs_metrics = 2000
+n_epochs_metrics = 50
 plot_every_epoch = 50
 n_epochs_fade = 1000
 use_fade = True
 
 n_latent = 200  # latent vector size
-lr_d = 0.001  # discriminator learning rate
+lr_d = 0.005  # discriminator learning rate
 lambd = 10
 one_sided_penalty = True
-distance_weighting = True
+distance_weighting = False
 eps_drift = 0.
-eps_center = 0.001
+eps_center = 0.
 lr_g = 0.001  # generator learning rate
 betas = (0., 0.99)  # optimizer betas
 
