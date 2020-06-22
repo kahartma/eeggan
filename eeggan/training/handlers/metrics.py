@@ -58,7 +58,7 @@ class WassersteinMetric(ListMetric[float]):
 
 class InceptionMetric(ListMetric[Tuple[float, float]]):
 
-    def __init__(self, deep4s: List[Module], upsample_factor, splits: int = 50, repetitions: int = 10):
+    def __init__(self, deep4s: List[Module], upsample_factor, splits: int = 1, repetitions: int = 100):
         self.deep4s = deep4s
         self.upsample_factor = upsample_factor
         self.splits = splits
