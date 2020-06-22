@@ -40,8 +40,8 @@ final_fs = orig_fs / 2  # reduced sampling rate of data
 n_batch = 128  # batch size
 n_stages = 6  # number of progressive stages
 n_epochs_per_stage = 2000  # epochs in each progressive stage
-n_epochs_metrics = 50
-plot_every_epoch = 50
+n_epochs_metrics = 100
+plot_every_epoch = 100
 n_epochs_fade = int(0.1 * n_epochs_per_stage)
 use_fade = False
 

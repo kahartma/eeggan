@@ -39,8 +39,8 @@ orig_fs = 512.  # sampling rate of data
 n_batch = 128  # batch size
 n_stages = 6  # number of progressive stages
 n_epochs_per_stage = 2000  # epochs in each progressive stage
-n_epochs_metrics = 50
-plot_every_epoch = 50
+n_epochs_metrics = 100
+plot_every_epoch = 100
 n_epochs_fade = 1000
 use_fade = True
 
