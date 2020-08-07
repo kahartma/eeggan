@@ -5,7 +5,7 @@ from torch import autograd
 from torch.nn.functional import softplus
 
 from eeggan.cuda import to_device
-from eeggan.data.data import Data
+from eeggan.data.dataset import Data
 from eeggan.training.discriminator import Discriminator
 from eeggan.training.generator import Generator
 from eeggan.training.trainer.trainer import Trainer

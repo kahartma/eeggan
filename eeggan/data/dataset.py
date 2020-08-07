@@ -23,3 +23,9 @@ class Data(SignalAndTarget, Iterable, Generic[T]):
 
     def __len__(self) -> int:
         return len(self.X)
+
+
+class Dataset:
+    def __init__(self, train_data: Data[T], test_data: Data[T]):
+        self.train_data = train_data
+        self.test_data = test_data

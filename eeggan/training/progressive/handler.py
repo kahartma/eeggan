@@ -5,11 +5,11 @@ from eeggan.training.progressive.generator import ProgressiveGenerator
 
 
 class ProgressionHandler:
-    def __init__(self, discriminator: ProgressiveDiscriminator, generator: ProgressiveGenerator, n_blocks: int,
+    def __init__(self, discriminator: ProgressiveDiscriminator, generator: ProgressiveGenerator, n_stages: int,
                  use_fade: bool, epochs_fade: int = None, current_stage: int = 0, current_alpha: float = 1.):
         self.discriminator = discriminator
         self.generator = generator
-        self.n_blocks = n_blocks
+        self.n_stages = n_stages
         self.use_fade = use_fade
         self.epochs_fade = epochs_fade
         self.current_stage = current_stage
@@ -20,7 +20,7 @@ class ProgressionHandler:
         self.current_alpha = current_alpha
         self.generator.cur_block = current_stage
         self.generator.alpha = current_alpha
-        self.discriminator.cur_block = self.n_blocks - current_stage - 1
+        self.discriminator.cur_block = self.n_stages - current_stage - 1
         self.discriminator.alpha = current_alpha
 
     def advance_stage(self):

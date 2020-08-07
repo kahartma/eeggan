@@ -5,7 +5,7 @@ from torch import sigmoid
 from torch.nn import BCELoss
 
 from eeggan.cuda import to_device
-from eeggan.data.data import Data
+from eeggan.data.dataset import Data
 from eeggan.training.discriminator import Discriminator
 from eeggan.training.generator import Generator
 from eeggan.training.trainer.trainer import Trainer
@@ -14,7 +14,7 @@ from eeggan.training.trainer.utils import detach_all
 
 class GanTrainer(Trainer):
 
-    def __init__(self, i_logging, discriminator: Discriminator, generator: Generator):
+    def __init__(self, i_logging: int, discriminator: Discriminator, generator: Generator):
         self.loss = BCELoss()
         super().__init__(i_logging, discriminator, generator)
 
@@ -51,7 +51,7 @@ class GanTrainer(Trainer):
         X_fake = self.generator(latent.requires_grad_(False), y=y_fake.requires_grad_(False),
                                 y_onehot=y_onehot_fake.requires_grad_(False))
 
-        batch_fake = Data[torch.Tensor](X_fake, y_fake, y_onehot_fake)
+        batch_fake: Data[torch.Tensor] = Data(X_fake, y_fake, y_onehot_fake)
         fx_fake = sigmoid(self.discriminator(batch_fake.X.requires_grad_(True), y=batch_fake.y.requires_grad_(True),
                                              y_onehot=batch_fake.y_onehot.requires_grad_(True)))
         loss = self.loss(fx_fake, torch.ones_like(fx_fake))

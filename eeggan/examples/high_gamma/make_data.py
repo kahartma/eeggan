@@ -3,6 +3,7 @@
 import copy
 import os
 from collections import OrderedDict
+from typing import Tuple, List
 
 import joblib
 import mne
@@ -11,9 +12,11 @@ from braindecode.datautil.signalproc import exponential_running_standardize
 from braindecode.datautil.trial_segment import create_signal_target_from_raw_mne
 from braindecode.mne_ext.signalproc import resample_cnt, mne_apply
 
+from eeggan.data.dataset import Data
 from eeggan.data.preprocess.resample import upsample, downsample
 from eeggan.data.preprocess.util import prepare_data
-from eeggan.examples.high_gamma_rest_right_10_20.braindecode_hack import BBCIDataset
+from eeggan.examples.high_gamma.braindecode_hack import BBCIDataset
+from eeggan.examples.high_gamma.dataset import HighGammaDataset
 from eeggan.validation.deep4 import train_completetrials
 
 SUBJ_INDECES = np.arange(1, 15)
@@ -25,38 +28,39 @@ CLASSDICT_RIGHT_LEFT_HAND = OrderedDict([('Right', 1), ('Left', 2)])
 CLASSDICT_REST_RIGHT_HAND = OrderedDict([('Rest', 3), ('Right', 1)])
 
 
-def make_dataset_for_subj(subj_ind, highgamma_path, dataset_path, channels, classdict, fs, segment_ival_ms,
-                          input_length):
+def make_dataset_for_subj(subj_ind: int, highgamma_path: str, dataset_path: str, channels: List[str],
+                          classdict: OrderedDict[Tuple[str, int]], fs: float, segment_ival_ms: Tuple[int, int],
+                          input_length: int):
     if not os.path.exists(dataset_path):
         os.makedirs(dataset_path)
 
     n_classes = len(classdict)
     train_filename = os.path.join(highgamma_path, 'train', '%s.mat' % subj_ind)
     train_set = extract_dataset(train_filename, channels, classdict, fs, segment_ival_ms)
-    train_set = prepare_data(train_set.X, train_set.y, n_classes, input_length, normalize=True)
+    train_set: Data[np.ndarray] = prepare_data(train_set.X, train_set.y, n_classes, input_length, normalize=True)
 
     test_filename = os.path.join(highgamma_path, 'test', '%s.mat' % subj_ind)
     test_set = extract_dataset(test_filename, channels, classdict, fs, segment_ival_ms)
-    test_set = prepare_data(test_set.X, test_set.y, n_classes, input_length, normalize=True)
+    test_set: Data[np.ndarray] = prepare_data(test_set.X, test_set.y, n_classes, input_length, normalize=True)
 
-    dump = dict(train_set=train_set, test_set=test_set, channels=channels, classes=classdict, fs=fs,
-                segment_ival_ms=segment_ival_ms)
-    joblib.dump(dump, os.path.join(dataset_path, '%s.dataset' % subj_ind), compress=True)
+    dataset = HighGammaDataset(train_set, test_set, train_set.X.shape[2], channels, [e[0] for e in classdict], fs,
+                               segment_ival_ms)
+    joblib.dump(dataset, os.path.join(dataset_path, '%s.dataset' % subj_ind), compress=True)
 
 
-def make_deep4_for_subj(subj_ind, dataset_path, deep4_path, n_progressive, n_deep4, fs):
+def make_deep4_for_subj(subj_ind: int, dataset_path: str, deep4_path: str, n_progressive: int, n_deep4: int):
     if not os.path.exists(deep4_path):
         os.makedirs(deep4_path)
 
     dataset = load_dataset(subj_ind, dataset_path)
     for i_stage in np.arange(n_progressive):
         models = []
-        train_set_stage = copy.copy(dataset['train_set'])
-        test_set_stage = copy.copy(dataset['test_set'])
+        train_set_stage = copy.copy(dataset.train_data)
+        test_set_stage = copy.copy(dataset.test_data)
         train_set_stage.X = make_data_for_stage(train_set_stage.X, i_stage, n_progressive - 1)
         test_set_stage.X = make_data_for_stage(test_set_stage.X, i_stage, n_progressive - 1)
         for i in range(n_deep4):
-            exp = make_deep4(train_set_stage, test_set_stage, len(dataset['classes']))
+            exp = make_deep4(train_set_stage, test_set_stage, len(dataset.classes))
             models.append(exp.model)
 
         joblib.dump(models, os.path.join(deep4_path, '%s_stage%s.deep4' % (subj_ind, i_stage)), compress=True)
@@ -74,7 +78,7 @@ def make_deep4(train_set, test_set, n_classes):
     return exp
 
 
-def load_dataset(index, path):
+def load_dataset(index: int, path: str) -> HighGammaDataset:
     return joblib.load(os.path.join(path, '%s.dataset' % index))
 
 
