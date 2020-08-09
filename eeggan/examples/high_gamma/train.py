@@ -94,7 +94,7 @@ def train(subj_ind: int, dataset_path: str, deep4s_path: str, result_path: str,
                    os.path.join(result_path, 'states_stage_%d.pt' % stage))
         torch.save(trainer.state.metrics, os.path.join(result_path, 'metrics_stage_%d.pt' % stage))
 
-        # advance stage of not last
+        # advance stage if not last
         trainer.detach_metrics(metrics, usage_metrics)
         if stage != progression_handler.n_stages - 1:
             progression_handler.advance_stage()

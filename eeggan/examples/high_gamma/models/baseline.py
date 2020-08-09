@@ -150,7 +150,7 @@ class Baseline(ProgressiveModelBuilder):
 
 
 def create_multiconv_for_stage(n_filters: int, i_stage: int):
-    groups = n_filters / ((i_stage + 1) * 2)
+    groups = int(n_filters / ((i_stage + 1) * 2))
     conv_configs = list()
     conv_configs.append({'kernel_size': 3, 'padding': 1, 'groups': groups})
     conv_configs.append({'kernel_size': 5, 'padding': 2, 'groups': groups})

@@ -3,7 +3,7 @@
 import copy
 import os
 from collections import OrderedDict
-from typing import Tuple, List
+from typing import Tuple, List, MutableMapping
 
 import joblib
 import mne
@@ -23,13 +23,13 @@ SUBJ_INDECES = np.arange(1, 15)
 CHANNELS_10_20 = ['Fp1', 'Fp2', 'F7', 'F3', 'Fz', 'F4', 'F8', 'T7', 'C3', 'Cz', 'C4', 'T8', 'P7', 'P3', 'Pz', 'P4',
                   'P8', 'O1', 'O2', 'M1', 'M2']
 
-CLASSDICT_ALL = OrderedDict([('Right', 1), ('Left', 2), ('Rest', 3), ('Feet', 4)])
+CLASSDICT_ALL: MutableMapping[str, int] = OrderedDict([('Right', 1), ('Left', 2), ('Rest', 3), ('Feet', 4)])
 CLASSDICT_RIGHT_LEFT_HAND = OrderedDict([('Right', 1), ('Left', 2)])
 CLASSDICT_REST_RIGHT_HAND = OrderedDict([('Rest', 3), ('Right', 1)])
 
 
 def make_dataset_for_subj(subj_ind: int, highgamma_path: str, dataset_path: str, channels: List[str],
-                          classdict: OrderedDict[Tuple[str, int]], fs: float, segment_ival_ms: Tuple[int, int],
+                          classdict: MutableMapping[str, int], fs: float, segment_ival_ms: Tuple[int, int],
                           input_length: int):
     if not os.path.exists(dataset_path):
         os.makedirs(dataset_path)
