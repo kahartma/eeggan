@@ -52,5 +52,5 @@ if __name__ == '__main__':
     progression_handler.set_progression(0, 1.)
     trainer.add_event_handler(Events.EPOCH_COMPLETED(every=1), progression_handler.advance_alpha)
 
-    train(SUBJ_IND, DATASET_PATH, DEEP4_PATH, "result_path", progression_handler, trainer, n_batch, lr_d, lr_g, betas,
+    train(SUBJ_IND, DATASET_PATH, DEEP4_PATH, RESULT_PATH, progression_handler, trainer, n_batch, lr_d, lr_g, betas,
           n_epochs_per_stage, n_epochs_metrics, plot_every_epoch, orig_fs)
