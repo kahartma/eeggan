@@ -36,8 +36,8 @@ n_time = INPUT_LENGTH
 
 if __name__ == '__main__':
     # create discriminator and generator modules
-    model_builder = Baseline(n_stages, n_latent, n_time, n_chans, n_classes, n_filters, upsampling='conv',
-                             downsampling='conv', discfading='cubic', genfading='cubic')
+    model_builder = Baseline(n_stages, n_latent, n_time, n_chans, n_classes, n_filters, upsampling='cubic',
+                             downsampling='conv')
     discriminator = model_builder.build_discriminator()
     generator = model_builder.build_generator()
 
