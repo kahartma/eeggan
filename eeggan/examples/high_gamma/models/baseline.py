@@ -6,12 +6,12 @@ from torch.nn.init import calculate_gain
 
 from eeggan.model.builder import ProgressiveModelBuilder
 from eeggan.pytorch.modules.conv.multiconv import MultiConv1d
-from eeggan.pytorch.modules.interpolate import Interpolate
 from eeggan.pytorch.modules.normalization.pixelnorm import PixelNorm
 from eeggan.pytorch.modules.projection.project import EmbeddedClassFilter, EmbeddedClassStyle
 from eeggan.pytorch.modules.reshape.permute import Permute
 from eeggan.pytorch.modules.reshape.pixelshuffle import PixelShuffle2d
 from eeggan.pytorch.modules.reshape.reshape import Reshape
+from eeggan.pytorch.modules.scaling.interpolate import Interpolate
 from eeggan.pytorch.modules.sequential import Sequential
 from eeggan.pytorch.modules.weights.weight_scaling import weight_scale
 from eeggan.training.progressive.discriminator import ProgressiveDiscriminatorBlock, ProgressiveDiscriminator

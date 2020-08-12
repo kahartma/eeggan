@@ -22,11 +22,11 @@ n_epochs_per_stage = 2000  # epochs in each progressive stage
 n_epochs_metrics = 100
 plot_every_epoch = 100
 n_epochs_fade = int(0.1 * n_epochs_per_stage)
-use_fade = False
+use_fade = True
 
 n_latent = 200  # latent vector size
 lr_d = 0.005  # discriminator learning rate
-r1_gamma = 0.
+r1_gamma = 10.
 r2_gamma = 0.
 lr_g = 0.001  # generator learning rate
 betas = (0., 0.99)  # optimizer betas
