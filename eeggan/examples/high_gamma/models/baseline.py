@@ -80,11 +80,7 @@ class Baseline(ProgressiveModelBuilder):
         )
 
     def build_disc_fade_sequence(self):
-        return Sequential(
-            Permute([0, 2, 1]),
-            build_interpolate(0.5, self.discfading),
-            Permute([0, 2, 1])
-        )
+        return build_interpolate(0.5, self.discfading)
 
     def build_discriminator(self) -> ProgressiveDiscriminator:
         blocks = []
@@ -137,11 +133,7 @@ class Baseline(ProgressiveModelBuilder):
         )
 
     def build_gen_fade_sequence(self):
-        return Sequential(
-            Permute([0, 2, 1]),
-            build_interpolate(2, self.discfading),
-            Permute([0, 2, 1])
-        )
+        return build_interpolate(2, self.discfading)
 
     def build_generator(self) -> ProgressiveGenerator:
         blocks = []
