@@ -40,7 +40,7 @@ n_time = INPUT_LENGTH
 def run(subj_ind: int, result_name: str, dataset_path: str, deep4_path: str, result_path: str):
     result_path_subj = os.path.join(result_path, result_name, str(subj_ind))
     # create discriminator and generator modules
-    model_builder = Baseline(n_stages, n_latent, n_time, n_chans, n_classes, n_filters, upsampling='nearest',
+    model_builder = Baseline(n_stages, n_latent, n_time, n_chans, n_classes, n_filters, upsampling='conv',
                              downsampling='conv', discfading='cubic', genfading='cubic')
     discriminator = model_builder.build_discriminator()
     generator = model_builder.build_generator()

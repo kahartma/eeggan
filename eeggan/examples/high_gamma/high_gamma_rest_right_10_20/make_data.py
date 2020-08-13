@@ -3,7 +3,6 @@
 
 from eeggan.cuda import init_cuda
 
-# https://gin.g-node.org/robintibor/high-gamma-dataset/
 from eeggan.examples.high_gamma.make_data import make_dataset_for_subj, CHANNELS_10_20, \
     CLASSDICT_REST_RIGHT_HAND, make_deep4_for_subj
 
@@ -14,6 +13,7 @@ N_PROGRESSIVE_STAGES = 6
 N_DEEP4 = 10
 
 
+# https://gin.g-node.org/robintibor/high-gamma-dataset/
 def run(subj_ind: int, high_gamma_datapath: str, dataset_path: str, deep4_path: str):
     init_cuda()  # activate cuda
 
