@@ -9,8 +9,7 @@ from eeggan.pytorch.utils.weights import weight_filler
 from eeggan.training.progressive.handler import ProgressionHandler
 from eeggan.training.trainer.gan_softplus import GanSoftplusTrainer
 
-SUBJ_IND = 1
-RESULT_PATH = "/home/khartmann/projects/eeggandata/results/%d/train2" % SUBJ_IND
+RESULT_PATH = "/home/khartmann/projects/eeggandata/results/%s/%d"
 
 n_chans = 21  # number of channels in data
 n_classes = 2  # number of classes in data
@@ -35,7 +34,9 @@ betas = (0., 0.99)  # optimizer betas
 n_filters = 120
 n_time = INPUT_LENGTH
 
-if __name__ == '__main__':
+
+def run(subj_ind: int, result_name: str):
+    result_path = RESULT_PATH % (result_name, subj_ind)
     # create discriminator and generator modules
     model_builder = Baseline(n_stages, n_latent, n_time, n_chans, n_classes, n_filters, upsampling='nearest',
                              downsampling='conv', discfading='cubic', genfading='cubic')
@@ -58,5 +59,5 @@ if __name__ == '__main__':
     generator.train()
     discriminator.train()
 
-    train(SUBJ_IND, DATASET_PATH, DEEP4_PATH, RESULT_PATH, progression_handler, trainer, n_batch, lr_d, lr_g, betas,
+    train(subj_ind, DATASET_PATH, DEEP4_PATH, result_path, progression_handler, trainer, n_batch, lr_d, lr_g, betas,
           n_epochs_per_stage, n_epochs_metrics, plot_every_epoch, orig_fs)
