@@ -37,7 +37,8 @@ class Baseline(ProgressiveModelBuilder):
             return build_interpolate(0.5, self.downsampling)
         if self.downsampling == 'conv':
             return Sequential(
-                weight_scale(nn.Conv1d(self.n_filters, self.n_filters, 2, stride=2),
+                nn.ReflectionPad1d(1),
+                weight_scale(nn.Conv1d(self.n_filters, self.n_filters, 4, stride=2),
                              gain=calculate_gain('leaky_relu')),
                 nn.LeakyReLU(0.2)
             )
@@ -47,7 +48,7 @@ class Baseline(ProgressiveModelBuilder):
             return build_interpolate(2, self.upsampling)
         if self.upsampling == 'conv':
             return Sequential(
-                weight_scale(nn.ConvTranspose1d(self.n_filters, self.n_filters, 2, stride=2),
+                weight_scale(nn.ConvTranspose1d(self.n_filters, self.n_filters, 4, stride=2, padding=1),
                              gain=calculate_gain('leaky_relu')),
                 nn.LeakyReLU(0.2)
             )
