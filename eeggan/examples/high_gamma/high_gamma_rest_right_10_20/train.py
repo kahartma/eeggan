@@ -1,7 +1,9 @@
 #  Author: Kay Hartmann <kg.hartma@gmail.com>
+import os
+
 from ignite.engine import Events
 
-from eeggan.examples.high_gamma.high_gamma_rest_right_10_20.make_data import DATASET_PATH, DEEP4_PATH, INPUT_LENGTH, FS, \
+from eeggan.examples.high_gamma.high_gamma_rest_right_10_20.make_data import INPUT_LENGTH, FS, \
     N_PROGRESSIVE_STAGES
 from eeggan.examples.high_gamma.models.baseline import Baseline
 from eeggan.examples.high_gamma.train import train
@@ -35,8 +37,8 @@ n_filters = 120
 n_time = INPUT_LENGTH
 
 
-def run(subj_ind: int, result_name: str):
-    result_path = RESULT_PATH % (result_name, subj_ind)
+def run(subj_ind: int, result_name: str, dataset_path: str, deep4_path: str, result_path: str):
+    result_path_subj = os.path.join(result_path, result_name, str(subj_ind))
     # create discriminator and generator modules
     model_builder = Baseline(n_stages, n_latent, n_time, n_chans, n_classes, n_filters, upsampling='nearest',
                              downsampling='conv', discfading='cubic', genfading='cubic')
@@ -59,5 +61,6 @@ def run(subj_ind: int, result_name: str):
     generator.train()
     discriminator.train()
 
-    train(subj_ind, DATASET_PATH, DEEP4_PATH, result_path, progression_handler, trainer, n_batch, lr_d, lr_g, betas,
+    train(subj_ind, dataset_path, deep4_path, result_path_subj, progression_handler, trainer, n_batch, lr_d, lr_g,
+          betas,
           n_epochs_per_stage, n_epochs_metrics, plot_every_epoch, orig_fs)
