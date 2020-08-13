@@ -66,7 +66,8 @@ class ProgressiveDiscriminator(Discriminator):
 
     def __init__(self, n_samples, n_channels, n_classes, blocks: List[ProgressiveDiscriminatorBlock]):
         super(ProgressiveDiscriminator, self).__init__(n_samples, n_channels, n_classes)
-        self.blocks = nn.ModuleList(blocks)
+        # noinspection PyTypeChecker
+        self.blocks: List[ProgressiveDiscriminatorBlock] = nn.ModuleList(blocks)
         self.cur_block = len(self.blocks) - 1
         self.alpha = 1.
 

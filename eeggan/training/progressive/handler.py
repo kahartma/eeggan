@@ -6,7 +6,8 @@ from eeggan.training.progressive.generator import ProgressiveGenerator
 
 class ProgressionHandler:
     def __init__(self, discriminator: ProgressiveDiscriminator, generator: ProgressiveGenerator, n_stages: int,
-                 use_fade: bool, epochs_fade: int = None, current_stage: int = 0, current_alpha: float = 1.):
+                 use_fade: bool, epochs_fade: int = None, current_stage: int = 0, current_alpha: float = 1.,
+                 freeze_stages=False):
         self.discriminator = discriminator
         self.generator = generator
         self.n_stages = n_stages
@@ -14,6 +15,7 @@ class ProgressionHandler:
         self.epochs_fade = epochs_fade
         self.current_stage = current_stage
         self.current_alpha = current_alpha
+        self.freeze_stages = freeze_stages
 
     def set_progression(self, current_stage: int, current_alpha: float):
         self.current_stage = current_stage
@@ -22,6 +24,18 @@ class ProgressionHandler:
         self.generator.alpha = current_alpha
         self.discriminator.cur_block = self.n_stages - current_stage - 1
         self.discriminator.alpha = current_alpha
+
+    def get_trainable_discriminator_parameters(self):
+        if not self.freeze_stages:
+            return self.discriminator.parameters()
+        else:
+            return self.discriminator.blocks[self.n_stages - self.current_stage - 1].parameters()
+
+    def get_trainable_generator_parameters(self):
+        if not self.freeze_stages:
+            return self.generator.parameters()
+        else:
+            return self.generator.blocks[self.current_stage].parameters()
 
     def advance_stage(self):
         alpha = 0.

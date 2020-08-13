@@ -67,7 +67,8 @@ class ProgressiveGenerator(Generator):
 
     def __init__(self, n_samples, n_channels, n_classes, n_latent, blocks: List[ProgressiveGeneratorBlock]):
         super(ProgressiveGenerator, self).__init__(n_samples, n_channels, n_classes, n_latent)
-        self.blocks: nn.ModuleList = nn.ModuleList(blocks)
+        # noinspection PyTypeChecker
+        self.blocks: List[ProgressiveGeneratorBlock] = nn.ModuleList(blocks)
         self.cur_block = 0
         self.alpha = 1.
 

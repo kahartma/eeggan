@@ -46,8 +46,9 @@ def train(subj_ind: int, dataset_path: str, deep4s_path: str, result_path: str,
 
     for stage in range(progression_handler.n_stages):
         # optimizer
-        optim_discriminator = optim.Adam(discriminator.parameters(), lr=lr_d, betas=betas)
-        optim_generator = optim.Adam(generator.parameters(), lr=lr_g, betas=betas)
+        optim_discriminator = optim.Adam(progression_handler.get_trainable_discriminator_parameters(), lr=lr_d,
+                                         betas=betas)
+        optim_generator = optim.Adam(progression_handler.get_trainable_generator_parameters(), lr=lr_g, betas=betas)
         trainer.set_optimizers(optim_discriminator, optim_generator)
 
         # modules to save

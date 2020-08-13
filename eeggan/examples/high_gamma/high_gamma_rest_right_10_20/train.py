@@ -10,7 +10,7 @@ from eeggan.training.progressive.handler import ProgressionHandler
 from eeggan.training.trainer.gan_softplus import GanSoftplusTrainer
 
 SUBJ_IND = 1
-RESULT_PATH = "/home/khartmann/projects/eeggandata/results/%d/train" % SUBJ_IND
+RESULT_PATH = "/home/khartmann/projects/eeggandata/results/%d/train2" % SUBJ_IND
 
 n_chans = 21  # number of channels in data
 n_classes = 2  # number of classes in data
@@ -22,12 +22,13 @@ n_epochs_per_stage = 2000  # epochs in each progressive stage
 n_epochs_metrics = 100
 plot_every_epoch = 100
 n_epochs_fade = int(0.1 * n_epochs_per_stage)
-use_fade = True
+use_fade = False
+freeze_stages = True
 
 n_latent = 200  # latent vector size
-lr_d = 0.005  # discriminator learning rate
 r1_gamma = 10.
 r2_gamma = 0.
+lr_d = 0.005  # discriminator learning rate
 lr_g = 0.001  # generator learning rate
 betas = (0., 0.99)  # optimizer betas
 
@@ -36,7 +37,7 @@ n_time = INPUT_LENGTH
 
 if __name__ == '__main__':
     # create discriminator and generator modules
-    model_builder = Baseline(n_stages, n_latent, n_time, n_chans, n_classes, n_filters, upsampling='conv',
+    model_builder = Baseline(n_stages, n_latent, n_time, n_chans, n_classes, n_filters, upsampling='nearest',
                              downsampling='conv', discfading='cubic', genfading='cubic')
     discriminator = model_builder.build_discriminator()
     generator = model_builder.build_generator()
@@ -49,9 +50,13 @@ if __name__ == '__main__':
     trainer = GanSoftplusTrainer(10, discriminator, generator, r1_gamma, r2_gamma)
 
     # handles potential progression after each epoch
-    progression_handler = ProgressionHandler(discriminator, generator, n_stages, use_fade, n_epochs_fade)
+    progression_handler = ProgressionHandler(discriminator, generator, n_stages, use_fade, n_epochs_fade,
+                                             freeze_stages=freeze_stages)
     progression_handler.set_progression(0, 1.)
     trainer.add_event_handler(Events.EPOCH_COMPLETED(every=1), progression_handler.advance_alpha)
+
+    generator.train()
+    discriminator.train()
 
     train(SUBJ_IND, DATASET_PATH, DEEP4_PATH, RESULT_PATH, progression_handler, trainer, n_batch, lr_d, lr_g, betas,
           n_epochs_per_stage, n_epochs_metrics, plot_every_epoch, orig_fs)
