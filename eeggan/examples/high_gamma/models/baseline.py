@@ -7,9 +7,7 @@ from torch.nn.init import calculate_gain
 from eeggan.model.builder import ProgressiveModelBuilder
 from eeggan.pytorch.modules.conv.multiconv import MultiConv1d
 from eeggan.pytorch.modules.normalization.pixelnorm import PixelNorm
-from eeggan.pytorch.modules.projection.project import EmbeddedClassFilter, EmbeddedClassStyle
-from eeggan.pytorch.modules.reshape.permute import Permute
-from eeggan.pytorch.modules.reshape.pixelshuffle import PixelShuffle2d
+from eeggan.pytorch.modules.projection.project import EmbeddedClassStyle
 from eeggan.pytorch.modules.reshape.reshape import Reshape
 from eeggan.pytorch.modules.scaling.interpolate import Interpolate
 from eeggan.pytorch.modules.sequential import Sequential
@@ -39,8 +37,7 @@ class Baseline(ProgressiveModelBuilder):
             return build_interpolate(0.5, self.downsampling)
         if self.downsampling == 'conv':
             return Sequential(
-                nn.ReflectionPad1d(1),
-                weight_scale(nn.Conv1d(self.n_filters, self.n_filters, 4, stride=2),
+                weight_scale(nn.Conv1d(self.n_filters, self.n_filters, 2, stride=2),
                              gain=calculate_gain('leaky_relu')),
                 nn.LeakyReLU(0.2)
             )
@@ -50,7 +47,7 @@ class Baseline(ProgressiveModelBuilder):
             return build_interpolate(2, self.upsampling)
         if self.upsampling == 'conv':
             return Sequential(
-                weight_scale(nn.ConvTranspose1d(self.n_filters, self.n_filters, 4, stride=2, padding=1),
+                weight_scale(nn.ConvTranspose1d(self.n_filters, self.n_filters, 2, stride=2),
                              gain=calculate_gain('leaky_relu')),
                 nn.LeakyReLU(0.2)
             )
@@ -64,18 +61,15 @@ class Baseline(ProgressiveModelBuilder):
                          gain=calculate_gain('leaky_relu')),
             nn.LeakyReLU(0.2),
             self.build_disc_downsample_sequence(),
-            weight_scale(EmbeddedClassFilter(self.n_classes, self.n_filters),
+            weight_scale(EmbeddedClassStyle(self.n_classes, self.n_filters),
                          gain=calculate_gain('leaky_relu')),
             nn.LeakyReLU(0.2)
         )
 
     def build_disc_in_sequence(self):
         return Sequential(
-            Permute([0, 2, 1]),
-            Reshape([[0], 1, [1], [2]]),
-            weight_scale(nn.Conv2d(1, self.n_filters, (1, self.n_channels)),
+            weight_scale(nn.Conv1d(self.n_channels, self.n_filters, 1),
                          gain=calculate_gain('leaky_relu')),
-            Reshape([[0], [1], [2]]),
             nn.LeakyReLU(0.2)
         )
 
@@ -123,14 +117,8 @@ class Baseline(ProgressiveModelBuilder):
         )
 
     def build_gen_out_sequence(self):
-        return Sequential(
-            weight_scale(nn.Conv1d(self.n_filters, self.n_channels, 1),
-                         gain=calculate_gain('linear')),
-            Reshape([[0], [1], [2], 1]),
-            PixelShuffle2d((1, self.n_channels)),
-            Reshape([[0], [2], [3]]),
-            Permute([0, 2, 1])
-        )
+        return Sequential(weight_scale(nn.Conv1d(self.n_filters, self.n_channels, 1),
+                                       gain=calculate_gain('linear')))
 
     def build_gen_fade_sequence(self):
         return build_interpolate(2, self.discfading)
