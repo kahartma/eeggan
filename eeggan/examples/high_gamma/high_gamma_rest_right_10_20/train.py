@@ -46,8 +46,9 @@ default_config = dict(
 def run(subj_ind: int, result_name: str, dataset_path: str, deep4_path: str, result_path: str,
         config: dict = default_config):
     result_path_subj = os.path.join(result_path, result_name, str(subj_ind))
+    os.makedirs(result_path_subj, exist_ok=True)
 
-    joblib.dump(config, os.path.join(result_path, result_name, str(subj_ind), 'config.dict'))
+    joblib.dump(config, os.path.join(result_path_subj, 'config.dict'))
 
     # create discriminator and generator modules
     model_builder = Baseline(config['n_stages'], config['n_latent'], config['n_time'], config['n_chans'],
