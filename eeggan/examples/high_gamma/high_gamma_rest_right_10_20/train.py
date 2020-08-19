@@ -7,6 +7,7 @@ from ignite.engine import Events
 from eeggan.examples.high_gamma.high_gamma_rest_right_10_20.make_data import FS, N_PROGRESSIVE_STAGES, INPUT_LENGTH
 from eeggan.examples.high_gamma.models.baseline import Baseline
 from eeggan.examples.high_gamma.train import train
+from eeggan.model.builder import ProgressiveModelBuilder
 from eeggan.pytorch.utils.weights import weight_filler
 from eeggan.training.progressive.handler import ProgressionHandler
 from eeggan.training.trainer.gan_softplus import GanSoftplusTrainer
@@ -42,19 +43,21 @@ default_config = dict(
     genfading='cubic',
 )
 
+default_model_builder = Baseline(default_config['n_stages'], default_config['n_latent'], default_config['n_time'],
+                                 default_config['n_chans'], default_config['n_classes'], default_config['n_filters'],
+                                 upsampling=default_config['upsampling'], downsampling=default_config['downsampling'],
+                                 discfading=default_config['discfading'], genfading=default_config['genfading'])
+
 
 def run(subj_ind: int, result_name: str, dataset_path: str, deep4_path: str, result_path: str,
-        config: dict = default_config):
+        config: dict = default_config, model_builder: ProgressiveModelBuilder = default_model_builder):
     result_path_subj = os.path.join(result_path, result_name, str(subj_ind))
     os.makedirs(result_path_subj, exist_ok=True)
 
     joblib.dump(config, os.path.join(result_path_subj, 'config.dict'))
+    joblib.dump(config, os.path.join(result_path_subj, 'model_builder.jblb'))
 
     # create discriminator and generator modules
-    model_builder = Baseline(config['n_stages'], config['n_latent'], config['n_time'], config['n_chans'],
-                             config['n_classes'], config['n_filters'], upsampling=config['upsampling'],
-                             downsampling=config['downsampling'], discfading=config['discfading'],
-                             genfading=config['genfading'])
     discriminator = model_builder.build_discriminator()
     generator = model_builder.build_generator()
 

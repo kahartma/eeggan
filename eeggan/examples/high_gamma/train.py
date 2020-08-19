@@ -60,7 +60,7 @@ def train(subj_ind: int, dataset_path: str, deep4s_path: str, result_path: str,
         select_modules = ['conv_4', 'softmax']
         deep4s = [to_cuda(IntermediateOutputWrapper(select_modules, deep4)) for deep4 in deep4s]
 
-        # scale data for current stagee
+        # scale data for current stage
         sample_factor = 2 ** (progression_handler.n_stages - stage - 1)
         X_block = downsample(train_data.X, factor=sample_factor, axis=2)
 
