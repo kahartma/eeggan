@@ -54,8 +54,8 @@ def run(subj_ind: int, result_name: str, dataset_path: str, deep4_path: str, res
     result_path_subj = os.path.join(result_path, result_name, str(subj_ind))
     os.makedirs(result_path_subj, exist_ok=True)
 
-    joblib.dump(config, os.path.join(result_path_subj, 'config.dict'))
-    joblib.dump(config, os.path.join(result_path_subj, 'model_builder.jblb'))
+    joblib.dump(config, os.path.join(result_path_subj, 'config.dict'), compress=False)
+    joblib.dump(model_builder, os.path.join(result_path_subj, 'model_builder.jblb'), compress=True)
 
     # create discriminator and generator modules
     discriminator = model_builder.build_discriminator()
